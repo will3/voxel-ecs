@@ -12,7 +12,7 @@ class Blocks {
 	}
 
 	start() {
-		this.app.scene.add(this.object);	
+		this.app.shared.scene.add(this.object);	
 	}
 
 	tick() {
@@ -20,7 +20,7 @@ class Blocks {
 	}
 
 	destroy() {
-		this.app.scene.remove(this.object);
+		this.app.shared.scene.remove(this.object);
 	}
 
 	get offset() {

@@ -1,25 +1,36 @@
 var shortid = require('shortid');
 var THREE = require('three');
+var ee = require('event-emitter');
 
-module.exports = function() {
-	var map = {};
+class App {
+	constructor() {
+		this.map = {};
+		this.shared = {};
+		this.delta = 1000 / 60;
+	}
 
-	function add(obj) {
+	add(obj) {
 		if (obj._id == null) {
 			obj._id = shortid();
 		}
 		obj.app = this;
-		map[obj._id] = obj;
+		this.map[obj._id] = obj;
+
+		this.emit('add', obj);
 	};
 
-	function remove(obj) {
+	remove(obj) {
 		obj._removed = true;
+
+		this.emit('remove', obj);
 	};
 
-	function tick() {
+	tick() {
+		this.emit('beforeTick');
+
 		var obj;
-		for (var id in map) {
-			obj = map[id];
+		for (var id in this.map) {
+			obj = this.map[id];
 			if (!obj._started) {
 				if (obj.start != null) {
 					obj.start();
@@ -28,8 +39,8 @@ module.exports = function() {
 			}
 		}
 
-		for (var id in map) {
-			obj = map[id];
+		for (var id in this.map) {
+			obj = this.map[id];
 			if (obj.tick != null) {
 				obj.tick();
 			}
@@ -37,8 +48,8 @@ module.exports = function() {
 
 		var idsToRemove = [];
 
-		for (var id in map) {
-			obj = map[id];
+		for (var id in this.map) {
+			obj = this.map[id];
 			if (obj._removed && !obj._destroyed) {
 				if (obj.destroy != null) {
 					obj.destroy();
@@ -50,14 +61,15 @@ module.exports = function() {
 
 		for (var i = 0; i < idsToRemove.length; i++) {
 			var id = idsToRemove[i];
-			delete map[id];
+			delete this.map[id];
 		}
-	};
 
-	return {
-		add: add,
-		remove: remove,
-		tick: tick,
-		scene: new THREE.Scene()
+		this.emit('afterTick');
 	};
+}
+
+ee(App.prototype);
+
+module.exports = function() {
+	return new App();
 };
